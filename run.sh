@@ -69,6 +69,22 @@ for rackdc in dc rack; do
 	fi
 done
 
+# if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
+# 	sed -ri 's/^(# )?('"$yaml"':).*/\2 '"$val"'/' "$CASSANDRA_CONFIG/cassandra.yaml"
+# fi
+
+# server_encryption_options:
+#   internode_encryption: all
+#   keystore: /Users/zznate/.ccm/sslverify/$NODE/conf/server-keystore.jks
+#   keystore_password: awesomekeypass
+#   truststore: /Users/zznate/.ccm/sslverify/$NODE/conf/server-truststore.jks
+#   truststore_password: truststorepass
+#   protocol: TLS
+#   algorithm: SunX509
+#   store_type: JKS
+#   cipher_suites: [TLS_RSA_WITH_AES_256_CBC_SHA]
+#   require_client_auth: t
+
 # Increase RLIMIT_MEMLOCK
 # We got this info from the following links:
 # - http://docs.datastax.com/en/cassandra/2.0/cassandra/troubleshooting/trblshootInsufficientResources_r.html
