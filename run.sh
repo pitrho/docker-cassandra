@@ -69,21 +69,36 @@ for rackdc in dc rack; do
 	fi
 done
 
-# if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
-# 	sed -ri 's/^(# )?('"$yaml"':).*/\2 '"$val"'/' "$CASSANDRA_CONFIG/cassandra.yaml"
-# fi
+if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
+  sed -ri "s|^.*(internode_encryption:).*$|    internode_encryption: ${CASSANDRA_INTERNODE_ENCRYPTION}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  sed -ri "s|^.*(keystore:).*$|    keystore: ${CASSANDRA_KEYSTORE_PATH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  sed -ri "s|^.*(keystore_password:).*$|    keystore_password: ${CASSANDRA_KEYSTORE_PASSWORD}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  sed -ri "s|^.*(truststore:).*$|    truststore: ${CASSANDRA_TRUSTSTORE_PATH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  sed -ri "s|^.*(truststore_password:).*$|    truststore_password: ${CASSANDRA_TRUSTSTORE_PASSWORD}|" "$CASSANDRA_CONFIG/cassandra.yaml"
 
-# server_encryption_options:
-#   internode_encryption: all
-#   keystore: /Users/zznate/.ccm/sslverify/$NODE/conf/server-keystore.jks
-#   keystore_password: awesomekeypass
-#   truststore: /Users/zznate/.ccm/sslverify/$NODE/conf/server-truststore.jks
-#   truststore_password: truststorepass
-#   protocol: TLS
-#   algorithm: SunX509
-#   store_type: JKS
-#   cipher_suites: [TLS_RSA_WITH_AES_256_CBC_SHA]
-#   require_client_auth: t
+  if [ -n "${CASSANDRA_SSL_PROTOCOL}" ]; then
+    sed -ri "s|^.*(protocol:).*$|    protocol: ${CASSANDRA_SSL_PROTOCOL}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  fi
+
+  if [ -n "${CASSANDRA_SSL_ALGORITHM}" ]; then
+    sed -ri "s|^.*(algorithm:).*$|    algorithm: ${CASSANDRA_SSL_ALGORITHM}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  fi
+
+  if [ -n "${CASSANDRA_SSL_STORE_TYPE}" ]; then
+    sed -ri "s|^.*(store_type:).*$|    store_type: ${CASSANDRA_SSL_STORE_TYPE}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  fi
+
+  if [ -n "${CASSANDRA_SSL_CIPHER_SUITES}" ]; then
+    sed -ri "s|^.*(cipher_suites:).*$|    cipher_suites: [${CASSANDRA_SSL_CIPHER_SUITES}]|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  fi
+
+  sed -ri "s|^.*(require_client_auth:).*$|    require_client_auth: ${CASSANDRA_REQUIRE_CLIENT_AUTH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+  sed -ri "s|^    enabled:.*$|    enabled: ${CASSANDRA_REQUIRE_CLIENT_AUTH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+fi
+
+if [ -n "${CASSANDRA_ENABLE_SSL_DEBUG}" ]; then
+  echo 'JVM_OPTS="$JVM_OPTS -Djavax.net.debug=ssl"' >> "$CASSANDRA_CONFIG/cassandra-env.sh"
+fi
 
 # Increase RLIMIT_MEMLOCK
 # We got this info from the following links:

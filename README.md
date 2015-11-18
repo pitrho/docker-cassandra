@@ -59,6 +59,57 @@ and use it as its DC property.
 ### CASSANDRA_ENDPOINT_SNITCH
 This variable sets the snitch implementation this node will use. It will set the endpoint_snitch option of cassandra.yml.
 
+### CASSANDRA_ENABLE_SSL
+If this variable enables the configuration for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_INTERNODE_ENCRYPTION
+This variable sets the internode_encryption value for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_KEYSTORE_PATH
+This variable sets the path to the location of the key store file under
+server_encryption_options and client_encryption_options. It is assumed
+that the key store will be mounted to the image using the volumes property.
+
+### CASSANDRA_KEYSTORE_PASSWORD
+This variable sets the key store password for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_TRUSTSTORE_PATH
+This variable sets the path to the location of the trust store file under
+server_encryption_options and client_encryption_options. It is assumed
+that the trust store will be mounted to the image using the volumes property.
+
+### CASSANDRA_TRUSTSTORE_PASSWORD
+This variable sets the trust store password for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_SSL_PROTOCOL
+This variables sets the ssl protocol for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_SSL_ALGORITHM
+This variables sets the ssl algorithm for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_SSL_STORE_TYPE
+This variables sets the ssl store type for server_encryption_options and
+client_encryption_options.
+
+### CASSANDRA_SSL_CIPHER_SUITES
+This variable sets the ssl cipher suites for server_encryption_options and
+client_encryption_options. You can specify multiple values using
+a comma-separated list.
+
+### CASSANDRA_REQUIRE_CLIENT_AUTH
+This variable enables client_encryption_options and sets require_client_auth
+under server_encryption_options and client_encryption_options.
+
+### CASSANDRA_ENABLE_SSL_DEBUG
+This variable enables ssl debugging on the server. Don't enable this on
+production, unless you are debugging ssl problems.
+
 ## Rancher Environment Variables
 
 Aside from the environment variables listed above, this image introduces some
