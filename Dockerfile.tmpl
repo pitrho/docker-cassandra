@@ -36,4 +36,8 @@ EXPOSE 7000 7001 7199 9042 9160
 RUN mkdir /etc/service/cassandra
 COPY run.sh /etc/service/cassandra/run
 
+# Add cqlshrc file
+RUN mkdir /root/.cassandra
+COPY cqlshrc /root/.cassandra/cqlshrc
+
 CMD ["/sbin/my_init"]

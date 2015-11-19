@@ -30,6 +30,7 @@ rm -rf build
 mkdir build
 
 cp run.sh build/
+cp cqlshrc build/
 
 # Copy docker file, and override the CASSANDRA_VERSION string
 sed 's/%%CASSANDRA_VERSION%%/'"$CASSANDRA_VERSION"'/g' Dockerfile.tmpl > build/Dockerfile

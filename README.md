@@ -106,6 +106,18 @@ a comma-separated list.
 This variable enables client_encryption_options and sets require_client_auth
 under server_encryption_options and client_encryption_options.
 
+### CASSANDRA_AUTHENTICATOR
+This sets the authenticator in cassandra.yml.
+
+### CASSANDRA_ENABLE_JMX_AUTHENTICATION
+This variable enables authentication through JMX
+
+### CASSANDRA_ENABLE_JMX_SSL
+This variable enables SSL through JMX
+
+### CASSANDRA_JMX_PORT
+This variable sets the JMX_PORT in cassandra-env.sh
+
 ### CASSANDRA_ENABLE_SSL_DEBUG
 This variable enables ssl debugging on the server. Don't enable this on
 production, unless you are debugging ssl problems.
