@@ -69,6 +69,7 @@ for rackdc in dc rack; do
 	fi
 done
 
+# Here we set those cassandra properties that are needed to enable SSL
 if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
   sed -ri "s|^.*(internode_encryption:).*$|    internode_encryption: ${CASSANDRA_INTERNODE_ENCRYPTION}|" "$CASSANDRA_CONFIG/cassandra.yaml"
   sed -ri "s|^.*(keystore:).*$|    keystore: ${CASSANDRA_KEYSTORE_PATH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
@@ -96,10 +97,21 @@ if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
   sed -ri "s|^    enabled:.*$|    enabled: ${CASSANDRA_REQUIRE_CLIENT_AUTH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
 fi
 
+# Here we override the cassandra authenticator parameter
 if [ -n "${CASSANDRA_AUTHENTICATOR}" ]; then
   sed -ri "s|^authenticator:.*$|authenticator: ${CASSANDRA_AUTHENTICATOR}|" "$CASSANDRA_CONFIG/cassandra.yaml"
+
+  # Here we override the user and password in the cqlshrc file
+  if [ "${CASSANDRA_AUTHENTICATOR}" = "PasswordAuthenticator" ]; then
+
+    cassandra_user=$( [ -z "${CASSANDRA_ADMIN_USER}" ] && echo "cassandra" || echo "${CASSANDRA_ADMIN_USER}" )
+    cassandra_pwd=$( [ -z "${CASSANDRA_ADMIN_PASSWORD}" ] && echo $([ -z $"${CASSANDRA_PASSWORD}" ] && echo "cassandra" || echo $CASSANDRA_PASSWORD ) || echo "${CASSANDRA_ADMIN_PASSWORD}" )
+    sed -ri 's|^username =.*|username = '"${cassandra_user}"'|' /root/.cassandra/cqlshrc
+    sed -ri 's|^password =.*|password = '"${cassandra_pwd}"'|' /root/.cassandra/cqlshrc
+  fi
 fi
 
+# Here we enable JMX access through authentication
 if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
   export LOCAL_JMX="no"
 
@@ -119,7 +131,9 @@ if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
     echo "cassandra readwrite" >> "$jvm_path/jre/lib/management/jmxremote.access"
   fi
 
+  # Here we enable SSL access for JMX
   if [ -n "${CASSANDRA_ENABLE_JMX_SSL}" ]; then
+    sed -ri 's|^.*(-Dcom\.sun\.management\.jmxremote\.ssl=).*|  JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=true"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
     sed -ri 's|^.*(-Djavax.net\.ssl\.keyStore=).*|  JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.keyStore='"${CASSANDRA_KEYSTORE_PATH}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
     sed -ri 's|^.*(-Djavax\.net\.ssl\.keyStorePassword=).*|  JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.keyStorePassword='"${CASSANDRA_KEYSTORE_PASSWORD}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
     sed -ri 's|^.*(-Djavax\.net\.ssl\.trustStore=).*|  JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.trustStore='"${CASSANDRA_TRUSTSTORE_PATH}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
@@ -162,39 +176,4 @@ echo "root - as unlimited" >> /etc/security/limits.conf
 rm -rf /var/lib/cassandra/*
 
 # start cassandra
-cassandra
-
-if [ -n "${CASSANDRA_CREATE_USER}" ]; then
-  # Wait for cassandra server status to be UN (Up-Normal) and create users if needed
-  i="0"
-  status=""
-  while [ $i -lt 60 ]
-  do
-    status=`nodetool status | grep "${CASSANDRA_LISTEN_ADDRESS}" | awk '{print $1}'`
-    if [ "${status}" = "UN" ]; then
-      break
-    fi
-
-    i=$[$i + 1]
-    sleep 1
-  done
-
-  if [ "${status}" = "UN" ]; then
-    cqlsh_cmd=$( [ -z "${CASSANDRA_ENABLE_SSL}" ] && echo "cqlsh" || echo "cqlsh --ssl" )
-
-    num_peers=`nodetool status | awk '/^(U|D)(N|L|J|M)/{count++} END{print count}'`
-    if [ "${num_peers}" = "1" ]; then
-      i="0"
-      while [ $i -lt 60 ]
-      do
-        $cqlsh_cmd -k system -e "CREATE USER IF NOT EXISTS ${CASSANDRA_ADMIN_USER} WITH PASSWORD '${CASSANDRA_ADMIN_PASSWORD}' SUPERUSER;" && \
-            $cqlsh_cmd -u $CASSANDRA_ADMIN_USER -p $CASSANDRA_ADMIN_PASSWORD -k system -e "ALTER USER cassandra WITH PASSWORD '${CASSANDRA_PASSWORD}' NOSUPERUSER;" && \
-            break || true
-        i=$[$i + 1]
-        sleep 1
-      done
-    fi
-  fi
-fi
-
-tail -f /var/log/cassandra/system.log
+cassandra -f

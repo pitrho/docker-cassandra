@@ -16,6 +16,7 @@ RUN echo 'deb http://www.apache.org/dist/cassandra/debian 22x main' >> /etc/apt/
 
 RUN apt-get update \
 	&& apt-get install -y cassandra="$CASSANDRA_VERSION" \
+  && update-rc.d -f cassandra remove \
 	&& rm -rf /var/lib/apt/lists/*
 
 ENV CASSANDRA_CONFIG /etc/cassandra
