@@ -2,24 +2,23 @@
 
 set -e
 
+: ${CASSANDRA_USERNAME='cassandra'}
+: ${CASSANDRA_PASSWORD='cassandra'}
+
 # TODO detect if this is a restart if necessary
 : ${CASSANDRA_LISTEN_ADDRESS='auto'}
 if [ "$CASSANDRA_LISTEN_ADDRESS" = 'auto' ]; then
-	CASSANDRA_LISTEN_ADDRESS="$(hostname --all-ip-addresses | awk '{print $2}')"
+	CASSANDRA_LISTEN_ADDRESS="$(hostname --all-ip-addresses | awk '{print $1}')"
 fi
 
 : ${CASSANDRA_BROADCAST_ADDRESS="$CASSANDRA_LISTEN_ADDRESS"}
-
 if [ "$CASSANDRA_BROADCAST_ADDRESS" = 'auto' ]; then
-	CASSANDRA_BROADCAST_ADDRESS="$(hostname --all-ip-addresses | awk '{print $2}')"
+	CASSANDRA_BROADCAST_ADDRESS="$(hostname --all-ip-addresses | awk '{print $1}')"
 fi
 : ${CASSANDRA_BROADCAST_RPC_ADDRESS:=$CASSANDRA_BROADCAST_ADDRESS}
 
-if [ -n "${CASSANDRA_NAME:+1}" ]; then
-	: ${CASSANDRA_SEEDS:="cassandra"}
-fi
-: ${CASSANDRA_SEEDS:="$CASSANDRA_BROADCAST_ADDRESS"}
-
+# If we're given a list of rancher services for seeds, then use the ips
+# from these services.
 if [ -n "${CASSANDRA_RANCHER_SERVICE_SEEDS}" ]; then
   # Loop through all the services and concat the ips
   for rancher_service in ${CASSANDRA_RANCHER_SERVICE_SEEDS//,/ } ; do
@@ -33,8 +32,8 @@ if [ -n "${CASSANDRA_RANCHER_SERVICE_SEEDS}" ]; then
  CASSANDRA_SEEDS=${SUB_SEEDS// /,}
 fi
 
+: ${CASSANDRA_SEEDS:="$CASSANDRA_BROADCAST_ADDRESS"}
 sed -ri 's/(- seeds:) "127.0.0.1"/\1 "'"$CASSANDRA_SEEDS"'"/' "$CASSANDRA_CONFIG/cassandra.yaml"
-
 
 for yaml in \
 	broadcast_address \
@@ -104,8 +103,8 @@ if [ -n "${CASSANDRA_AUTHENTICATOR}" ]; then
   # Here we override the user and password in the cqlshrc file
   if [ "${CASSANDRA_AUTHENTICATOR}" = "PasswordAuthenticator" ]; then
 
-    cassandra_user=$( [ -z "${CASSANDRA_ADMIN_USER}" ] && echo "cassandra" || echo "${CASSANDRA_ADMIN_USER}" )
-    cassandra_pwd=$( [ -z "${CASSANDRA_ADMIN_PASSWORD}" ] && echo $([ -z $"${CASSANDRA_PASSWORD}" ] && echo "cassandra" || echo $CASSANDRA_PASSWORD ) || echo "${CASSANDRA_ADMIN_PASSWORD}" )
+    cassandra_user=$( [ -z "${CASSANDRA_ADMIN_USER}" ] && echo "${CASSANDRA_USERNAME}" || echo "${CASSANDRA_ADMIN_USER}" )
+    cassandra_pwd=$( [ -z "${CASSANDRA_ADMIN_PASSWORD}" ] && echo "${CASSANDRA_PASSWORD}" || echo "${CASSANDRA_ADMIN_PASSWORD}" )
     sed -ri 's|^username =.*|username = '"${cassandra_user}"'|' /root/.cassandra/cqlshrc
     sed -ri 's|^password =.*|password = '"${cassandra_pwd}"'|' /root/.cassandra/cqlshrc
   fi
@@ -122,13 +121,14 @@ if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
   sed -ri 's|^(# )?monitorRole.*|monitorRole QED|' "$CASSANDRA_CONFIG/jmxremote.password"
   sed -ri 's|^(# )?controlRole.*|controlRole R&D|' "$CASSANDRA_CONFIG/jmxremote.password"
 
+	# If we were given a specific JMX admin user and password, then set it on the jmxremote.* files
+	# Otherwise, simply use the defined cassandra username and password
   if [ -n "${CASSANDRA_ADMIN_USER}" -a -n "${CASSANDRA_ADMIN_PASSWORD}" ]; then
     echo "${CASSANDRA_ADMIN_USER} ${CASSANDRA_ADMIN_PASSWORD}" >> "$CASSANDRA_CONFIG/jmxremote.password"
     echo "${CASSANDRA_ADMIN_USER} readwrite" >> "$jvm_path/jre/lib/management/jmxremote.access"
   else
-    cassandra_pwd=$( [ -z "${CASSANDRA_PASSWORD}" ] && echo "cassandra" || echo "${CASSANDRA_PASSWORD}" )
-    echo "cassandra ${cassandra_pwd}" >> "$CASSANDRA_CONFIG/jmxremote.password"
-    echo "cassandra readwrite" >> "$jvm_path/jre/lib/management/jmxremote.access"
+    echo "${CASSANDRA_USERNAME} ${CASSANDRA_PASSWORD}" >> "$CASSANDRA_CONFIG/jmxremote.password"
+    echo "${CASSANDRA_USERNAME} readwrite" >> "$jvm_path/jre/lib/management/jmxremote.access"
   fi
 
   # Here we enable SSL access for JMX
