@@ -171,9 +171,5 @@ echo "root - nofile 100000" >> /etc/security/limits.conf
 echo "root - nproc 32768" >> /etc/security/limits.conf
 echo "root - as unlimited" >> /etc/security/limits.conf
 
-# Clear out system data
-# http://docs.datastax.com/en/cassandra/2.0/cassandra/initialize/initializeSingleDS.html
-rm -rf /var/lib/cassandra/*
-
 # start cassandra
 cassandra -f
