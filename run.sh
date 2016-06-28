@@ -125,6 +125,7 @@ if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
 
   sed -ri 's|^(# )?monitorRole.*|monitorRole QED|' "$CASSANDRA_CONFIG/jmxremote.password"
   sed -ri 's|^(# )?controlRole.*|controlRole R&D|' "$CASSANDRA_CONFIG/jmxremote.password"
+  sed -ri 's|^.*(-Djava\.rmi\.server\.hostname=).*|  JVM_OPTS="$JVM_OPTS -Djava.rmi.server.hostname='"${CASSANDRA_LISTEN_ADDRESS}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
 
 	# If we were given a specific JMX admin user and password, then set it on the jmxremote.* files
 	# Otherwise, simply use the defined cassandra username and password
