@@ -4,11 +4,16 @@ set -e
 
 : ${CASSANDRA_USERNAME='cassandra'}
 : ${CASSANDRA_PASSWORD='cassandra'}
+: ${USE_RANCHER_IP:=false}
 
 # TODO detect if this is a restart if necessary
 : ${CASSANDRA_LISTEN_ADDRESS='auto'}
 if [ "$CASSANDRA_LISTEN_ADDRESS" = 'auto' ]; then
-	CASSANDRA_LISTEN_ADDRESS="$(hostname --all-ip-addresses | awk '{print $1}')"
+	if [ $USE_RANCHER_IP == true ]; then
+		CASSANDRA_LISTEN_ADDRESS=$(curl http://rancher-metadata/2015-12-19/self/host/agent_ip)
+	else
+		CASSANDRA_LISTEN_ADDRESS="$(hostname --all-ip-addresses | awk '{print $1}')"
+	fi
 fi
 
 : ${CASSANDRA_BROADCAST_ADDRESS="$CASSANDRA_LISTEN_ADDRESS"}
