@@ -38,6 +38,9 @@ EXPOSE 7000 7001 7199 9042 9160
 RUN mkdir /etc/service/cassandra
 COPY run.sh /etc/service/cassandra/run
 
+# Remove the CRON service
+RUN rm -rf /etc/service/cron
+
 # Add cqlshrc file
 RUN mkdir /root/.cassandra
 COPY cqlshrc /root/.cassandra/cqlshrc
