@@ -5,6 +5,10 @@ set -e
 : ${CASSANDRA_USERNAME='cassandra'}
 : ${CASSANDRA_PASSWORD='cassandra'}
 : ${USE_RANCHER_IP:=false}
+: ${CASSANDRA_ENABLE_SSL:=false}
+: ${CASSANDRA_ENABLE_JMX_AUTHENTICATION:=false}
+: ${CASSANDRA_ENABLE_JMX_SSL:=false}
+: ${CASSANDRA_ENABLE_SSL_DEBUG:=false}
 
 # TODO detect if this is a restart if necessary
 : ${CASSANDRA_LISTEN_ADDRESS='auto'}
@@ -74,7 +78,7 @@ for rackdc in dc rack; do
 done
 
 # Here we set those cassandra properties that are needed to enable SSL
-if [ -n "${CASSANDRA_ENABLE_SSL}" ]; then
+if [ $CASSANDRA_ENABLE_SSL = true ]; then
   sed -ri "s|^.*(internode_encryption:).*$|    internode_encryption: ${CASSANDRA_INTERNODE_ENCRYPTION}|" "$CASSANDRA_CONFIG/cassandra.yaml"
   sed -ri "s|^.*(keystore:).*$|    keystore: ${CASSANDRA_KEYSTORE_PATH}|" "$CASSANDRA_CONFIG/cassandra.yaml"
   sed -ri "s|^.*(keystore_password:).*$|    keystore_password: ${CASSANDRA_KEYSTORE_PASSWORD}|" "$CASSANDRA_CONFIG/cassandra.yaml"
@@ -116,7 +120,7 @@ if [ -n "${CASSANDRA_AUTHENTICATOR}" ]; then
 fi
 
 # Here we enable JMX access through authentication
-if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
+if [ $CASSANDRA_ENABLE_JMX_AUTHENTICATION = true ]; then
   export LOCAL_JMX="no"
 
   jvm_path=`update-java-alternatives -l | awk '{print $3}'`
@@ -138,7 +142,7 @@ if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
   fi
 
   # Here we enable SSL access for JMX
-  if [ -n "${CASSANDRA_ENABLE_JMX_SSL}" ]; then
+  if [ $CASSANDRA_ENABLE_JMX_SSL = true ]; then
     sed -ri 's|^.*(-Dcom\.sun\.management\.jmxremote\.ssl=).*|  JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.ssl=true"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
     sed -ri 's|^.*(-Djavax.net\.ssl\.keyStore=).*|  JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.keyStore='"${CASSANDRA_KEYSTORE_PATH}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
     sed -ri 's|^.*(-Djavax\.net\.ssl\.keyStorePassword=).*|  JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.keyStorePassword='"${CASSANDRA_KEYSTORE_PASSWORD}"'"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
@@ -164,7 +168,7 @@ if [ -n "${CASSANDRA_ENABLE_JMX_AUTHENTICATION}" ]; then
 
 fi
 
-if [ -n "${CASSANDRA_ENABLE_SSL_DEBUG}" ]; then
+if [ $CASSANDRA_ENABLE_SSL_DEBUG = true ]; then
   echo 'JVM_OPTS="$JVM_OPTS -Djavax.net.debug=ssl"' >> "$CASSANDRA_CONFIG/cassandra-env.sh"
 fi
 
