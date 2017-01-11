@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CASSANDRA_VERSION="2.2.3"
+CASSANDRA_VERSION="2.2.5"
 IMAGE_TAG="pitrho/cassandra"
 
 # Custom die function.

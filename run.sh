@@ -9,6 +9,7 @@ set -e
 : ${CASSANDRA_ENABLE_JMX_AUTHENTICATION:=false}
 : ${CASSANDRA_ENABLE_JMX_SSL:=false}
 : ${CASSANDRA_ENABLE_SSL_DEBUG:=false}
+: ${CASSANDRA_ENABLE_G1GC:=false}
 
 # TODO detect if this is a restart if necessary
 : ${CASSANDRA_LISTEN_ADDRESS='auto'}
@@ -171,6 +172,21 @@ fi
 if [ $CASSANDRA_ENABLE_SSL_DEBUG = true ]; then
   echo 'JVM_OPTS="$JVM_OPTS -Djavax.net.debug=ssl"' >> "$CASSANDRA_CONFIG/cassandra-env.sh"
 fi
+
+if [ $CASSANDRA_ENABLE_G1GC = true ]; then
+	sed -ri 's|^.*(-Xmn\$\{HEAP_NEWSIZE\}).*|# JVM_OPTS="$JVM_OPTS -Xmn${HEAP_NEWSIZE}"|' "$CASSANDRA_CONFIG/cassandra-env.sh"
+
+	# Clear existing GC options
+	sed -ir '/GC tuning options/,/GC logging options/c\# GC logging options' "$CASSANDRA_CONFIG/cassandra-env.sh"
+
+	# Add G1GC options
+	sed -ir 's/# GC logging options/# G1GC options\nJVM_OPTS="\$JVM_OPTS \-XX:\+UseG1GC"\nJVM_OPTS="\$JVM_OPTS \-XX:MaxGCPauseMillis=500"\nJVM_OPTS="\$JVM_OPTS \-XX:G1RSetUpdatingPauseTimePercent=5"\nJVM_OPTS="\$JVM_OPTS \-XX:+AlwaysPreTouch"\nJVM_OPTS="\$JVM_OPTS \-XX:\-UseBiasedLocking"\nJVM_OPTS="\$JVM_OPTS \-XX:\+UseTLAB \-XX:\+ResizeTLAB"\nJVM_OPTS="\$JVM_OPTS \-XX:\+PerfDisableSharedMem"\nJVM_OPTS="\$JVM_OPTS \-XX:CompileCommandFile=\$CASSANDRA_CONF\/hotspot_compiler"\n\n# GC logging options/' "$CASSANDRA_CONFIG/cassandra-env.sh"
+
+	# Add +UseCondCardMark back since it was removed when we cleared GC options above
+	sed -ir 's/# GC logging options/if [ "$JVM_ARCH" = "64-Bit" ] ; then\n    JVM_OPTS="$JVM_OPTS -XX:+UseCondCardMark"\nfi\n\n# GC logging options/' "$CASSANDRA_CONFIG/cassandra-env.sh"
+
+fi
+
 
 # Increase RLIMIT_MEMLOCK
 # We got this info from the following links:
