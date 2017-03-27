@@ -53,6 +53,12 @@ for yaml in \
 	listen_address \
 	num_tokens \
   commitlog_total_space_in_mb \
+	concurrent_reads \
+	concurrent_writes \
+	concurrent_counter_writes \
+	concurrent_compactors \
+	compaction_throughput_mb_per_sec \
+	key_cache_size_in_mb \
 ; do
 	var="CASSANDRA_${yaml^^}"
 	val="${!var}"
@@ -120,13 +126,13 @@ if [ -n "${CASSANDRA_AUTHENTICATOR}" ]; then
   fi
 fi
 
+export LOCAL_JMX="no"
+jvm_path=`update-java-alternatives -l | awk '{print $3}'`
+cp $jvm_path/jre/lib/management/jmxremote.password.template $CASSANDRA_CONFIG/jmxremote.password
+chmod 400 /etc/cassandra/jmxremote.password
+
 # Here we enable JMX access through authentication
 if [ $CASSANDRA_ENABLE_JMX_AUTHENTICATION = true ]; then
-  export LOCAL_JMX="no"
-
-  jvm_path=`update-java-alternatives -l | awk '{print $3}'`
-  cp $jvm_path/jre/lib/management/jmxremote.password.template $CASSANDRA_CONFIG/jmxremote.password
-  chmod 400 /etc/cassandra/jmxremote.password
 
   sed -ri 's|^(# )?monitorRole.*|monitorRole QED|' "$CASSANDRA_CONFIG/jmxremote.password"
   sed -ri 's|^(# )?controlRole.*|controlRole R&D|' "$CASSANDRA_CONFIG/jmxremote.password"

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.0 (2017-03-27)
+* Added ability to override the following parameters in the cassandra.yaml file:
+ * concurrent_reads
+ * concurrent_writes
+ * concurrent_counter_writes
+ * concurrent_compactors
+ * compaction_throughput_mb_per_sec
+ * key_cache_size_in_mb
+* Bug fix to copy the jmxremote.password from the jre to /etc/cassandra even
+if JMX is not setup with Authentication.
+
 ## v0.5.0 (2017-01-10)
 * Changed default version to Cassandra 2.2.5.
 * Added configuration parameter CASSANDRA_ENABLE_G1GC to enable G1 GC.
