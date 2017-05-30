@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.7.0 (2017-05-30)
+* Added ability to override the following parameters in the cassandra.yaml file:
+ * memtable_allocation_type
+ * memtable_heap_space_in_mb
+ * memtable_offheap_space_in_mb
+* Bug fix to properly replace the values in the cassandra.yaml file using sed.
+
 ## v0.6.0 (2017-03-27)
 * Added ability to override the following parameters in the cassandra.yaml file:
  * concurrent_reads

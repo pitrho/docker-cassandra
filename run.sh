@@ -59,11 +59,14 @@ for yaml in \
 	concurrent_compactors \
 	compaction_throughput_mb_per_sec \
 	key_cache_size_in_mb \
+	memtable_allocation_type \
+	memtable_heap_space_in_mb \
+	memtable_offheap_space_in_mb \
 ; do
 	var="CASSANDRA_${yaml^^}"
 	val="${!var}"
 	if [ "$val" ]; then
-		sed -ri 's/^(# )?('"$yaml"':).*/\2 '"$val"'/' "$CASSANDRA_CONFIG/cassandra.yaml"
+		sed -ri "s|^(#)?( )?(${yaml}:).*|${yaml}: ${val}|" "$CASSANDRA_CONFIG/cassandra.yaml"
 	fi
 done
 
