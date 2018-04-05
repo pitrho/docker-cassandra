@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0 (2018-03-26) 
+* Added ability to override the following parameters in the cassandra.yml file:
+ * trickle_fsync
+ * trickle_fsync_interval_in_kb
+ * write_request_timeout_in_ms
+ * read_request_timeout_in_ms.
+
 ## v0.7.0 (2017-05-30)
 * Added ability to override the following parameters in the cassandra.yaml file:
  * memtable_allocation_type

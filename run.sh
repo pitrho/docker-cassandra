@@ -62,6 +62,10 @@ for yaml in \
 	memtable_allocation_type \
 	memtable_heap_space_in_mb \
 	memtable_offheap_space_in_mb \
+	trickle_fsync \
+	trickle_fsync_interval_in_kb \
+	read_request_timeout_in_ms \
+	write_request_timeout_in_ms \
 ; do
 	var="CASSANDRA_${yaml^^}"
 	val="${!var}"
